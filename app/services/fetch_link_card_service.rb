@@ -60,6 +60,7 @@ class FetchLinkCardService < BaseService
   def attach_card
     @status.preview_cards << @card
     Rails.cache.delete(@status)
+    Trends.links.add(@card.id, @status.account_id) if @status.public_visibility?
   end
 
   def parse_urls

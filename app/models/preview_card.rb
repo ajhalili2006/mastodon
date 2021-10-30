@@ -54,6 +54,10 @@ class PreviewCard < ApplicationRecord
 
   before_save :extract_dimensions, if: :link?
 
+  def domain
+    @domain ||= Addressable::URI.parse(url).normalized_host
+  end
+
   def local?
     false
   end

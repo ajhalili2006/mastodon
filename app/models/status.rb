@@ -23,6 +23,7 @@
 #  in_reply_to_account_id :bigint(8)
 #  poll_id                :bigint(8)
 #  deleted_at             :datetime
+#  edited_at              :datetime
 #
 
 class Status < ApplicationRecord
