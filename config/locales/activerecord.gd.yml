@@ -15,6 +15,11 @@ gd:
       user/invite_request:
         text: Adhbhar
     errors:
+      attributes:
+        domain:
+          invalid: "– chan eil seo ’na ainm àrainne dligheach"
+      messages:
+        invalid_domain_on_line: Chan eil %{value} ’na ainm àrainne dligheach
       models:
         account:
           attributes:
@@ -29,6 +34,10 @@ gd:
           attributes:
             website:
               invalid: "– chan eil seo ’na URL dligheach"
+        import:
+          attributes:
+            data:
+              malformed: "– chan eil cruth dligheach air"
         status:
           attributes:
             reblog:
@@ -49,3 +58,7 @@ gd:
             position:
               elevated: chan fhaod seo a bhith nas àirde na an dreuchd a th’ agad an-dràsta
               own_role: cha ghabh seo atharrachadh leis an dreuchd a th’ agad an-dràsta
+        webhook:
+          attributes:
+            events:
+              invalid_permissions: chan fhaod thu tachartasan air nach eil ceadan agad a ghabhail a-steach

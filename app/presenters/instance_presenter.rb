@@ -12,16 +12,14 @@ class InstancePresenter < ActiveModelSerializers::Model
     end
 
     def account
-      Account.find_local(Setting.site_contact_username.strip.gsub(/\A@/, ''))
+      username, domain = Setting.site_contact_username.strip.gsub(/\A@/, '').split('@', 2)
+      domain = nil if TagManager.instance.local_domain?(domain)
+      Account.find_remote(username, domain) if username.present?
     end
   end
 
   def contact
     ContactPresenter.new
-  end
-
-  def closed_registrations_message
-    Setting.closed_registrations_message
   end
 
   def description
@@ -32,8 +30,8 @@ class InstancePresenter < ActiveModelSerializers::Model
     Setting.site_extended_description
   end
 
-  def privacy_policy
-    Setting.site_terms
+  def status_page_url
+    Setting.status_page_url
   end
 
   def domain
@@ -68,10 +66,6 @@ class InstancePresenter < ActiveModelSerializers::Model
     Rails.cache.fetch('distinct_domain_count') { Instance.count }
   end
 
-  def sample_accounts
-    Rails.cache.fetch('sample_accounts', expires_in: 12.hours) { Account.local.discoverable.popular.limit(3) }
-  end
-
   def version
     Mastodon::Version.to_s
   end
@@ -86,5 +80,17 @@ class InstancePresenter < ActiveModelSerializers::Model
 
   def mascot
     @mascot ||= Rails.cache.fetch('site_uploads/mascot') { SiteUpload.find_by(var: 'mascot') }
+  end
+
+  def favicon
+    return @favicon if defined?(@favicon)
+
+    @favicon ||= Rails.cache.fetch('site_uploads/favicon') { SiteUpload.find_by(var: 'favicon') }
+  end
+
+  def app_icon
+    return @app_icon if defined?(@app_icon)
+
+    @app_icon ||= Rails.cache.fetch('site_uploads/app_icon') { SiteUpload.find_by(var: 'app_icon') }
   end
 end

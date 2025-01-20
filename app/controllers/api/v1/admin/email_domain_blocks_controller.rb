@@ -14,19 +14,6 @@ class Api::V1::Admin::EmailDomainBlocksController < Api::BaseController
   after_action :verify_authorized
   after_action :insert_pagination_headers, only: :index
 
-  PAGINATION_PARAMS = %i(
-    limit
-  ).freeze
-
-  def create
-    authorize :email_domain_block, :create?
-
-    @email_domain_block = EmailDomainBlock.create!(resource_params)
-    log_action :create, @email_domain_block
-
-    render json: @email_domain_block, serializer: REST::Admin::EmailDomainBlockSerializer
-  end
-
   def index
     authorize :email_domain_block, :index?
     render json: @email_domain_blocks, each_serializer: REST::Admin::EmailDomainBlockSerializer
@@ -37,13 +24,20 @@ class Api::V1::Admin::EmailDomainBlocksController < Api::BaseController
     render json: @email_domain_block, serializer: REST::Admin::EmailDomainBlockSerializer
   end
 
-  def destroy
-    authorize @email_domain_block, :destroy?
+  def create
+    authorize :email_domain_block, :create?
 
-    @email_domain_block.destroy!
-    log_action :destroy, @email_domain_block
+    @email_domain_block = EmailDomainBlock.create!(resource_params)
+    log_action :create, @email_domain_block
 
     render json: @email_domain_block, serializer: REST::Admin::EmailDomainBlockSerializer
+  end
+
+  def destroy
+    authorize @email_domain_block, :destroy?
+    @email_domain_block.destroy!
+    log_action :destroy, @email_domain_block
+    render_empty
   end
 
   private
@@ -57,11 +51,7 @@ class Api::V1::Admin::EmailDomainBlocksController < Api::BaseController
   end
 
   def resource_params
-    params.permit(:domain)
-  end
-
-  def insert_pagination_headers
-    set_pagination_headers(next_path, prev_path)
+    params.permit(:domain, :allow_with_approval)
   end
 
   def next_path
@@ -72,19 +62,11 @@ class Api::V1::Admin::EmailDomainBlocksController < Api::BaseController
     api_v1_admin_email_domain_blocks_url(pagination_params(min_id: pagination_since_id)) unless @email_domain_blocks.empty?
   end
 
-  def pagination_max_id
-    @email_domain_blocks.last.id
-  end
-
-  def pagination_since_id
-    @email_domain_blocks.first.id
+  def pagination_collection
+    @email_domain_blocks
   end
 
   def records_continue?
     @email_domain_blocks.size == limit_param(LIMIT)
-  end
-
-  def pagination_params(core_params)
-    params.slice(*PAGINATION_PARAMS).permit(*PAGINATION_PARAMS).merge(core_params)
   end
 end

@@ -14,19 +14,6 @@ class Api::V1::Admin::IpBlocksController < Api::BaseController
   after_action :verify_authorized
   after_action :insert_pagination_headers, only: :index
 
-  PAGINATION_PARAMS = %i(
-    limit
-  ).freeze
-
-  def create
-    authorize :ip_block, :create?
-
-    @ip_block = IpBlock.create!(resource_params)
-    log_action :create, @ip_block
-
-    render json: @ip_block, serializer: REST::Admin::IpBlockSerializer
-  end
-
   def index
     authorize :ip_block, :index?
     render json: @ip_blocks, each_serializer: REST::Admin::IpBlockSerializer
@@ -37,22 +24,25 @@ class Api::V1::Admin::IpBlocksController < Api::BaseController
     render json: @ip_block, serializer: REST::Admin::IpBlockSerializer
   end
 
+  def create
+    authorize :ip_block, :create?
+    @ip_block = IpBlock.create!(resource_params)
+    log_action :create, @ip_block
+    render json: @ip_block, serializer: REST::Admin::IpBlockSerializer
+  end
+
   def update
     authorize @ip_block, :update?
-
     @ip_block.update(resource_params)
     log_action :update, @ip_block
-
     render json: @ip_block, serializer: REST::Admin::IpBlockSerializer
   end
 
   def destroy
     authorize @ip_block, :destroy?
-
     @ip_block.destroy!
     log_action :destroy, @ip_block
-
-    render json: @ip_block, serializer: REST::Admin::IpBlockSerializer
+    render_empty
   end
 
   private
@@ -69,10 +59,6 @@ class Api::V1::Admin::IpBlocksController < Api::BaseController
     params.permit(:ip, :severity, :comment, :expires_in)
   end
 
-  def insert_pagination_headers
-    set_pagination_headers(next_path, prev_path)
-  end
-
   def next_path
     api_v1_admin_ip_blocks_url(pagination_params(max_id: pagination_max_id)) if records_continue?
   end
@@ -81,19 +67,11 @@ class Api::V1::Admin::IpBlocksController < Api::BaseController
     api_v1_admin_ip_blocks_url(pagination_params(min_id: pagination_since_id)) unless @ip_blocks.empty?
   end
 
-  def pagination_max_id
-    @ip_blocks.last.id
-  end
-
-  def pagination_since_id
-    @ip_blocks.first.id
+  def pagination_collection
+    @ip_blocks
   end
 
   def records_continue?
     @ip_blocks.size == limit_param(LIMIT)
-  end
-
-  def pagination_params(core_params)
-    params.slice(*PAGINATION_PARAMS).permit(*PAGINATION_PARAMS).merge(core_params)
   end
 end
